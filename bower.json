@@ -16,6 +16,7 @@
   "homepage": "https://github.com/suhajdab/strf-time/",
   "ignore": [
     "/.*",
+    "components",
     "/tests/"
   ],
   "dependencies": {
