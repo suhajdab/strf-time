@@ -1,0 +1,79 @@
+<!--
+    @license
+    Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<!doctype html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+    <title>&lt;time is=&quot;strf-time&quot;&gt; Demo</title>
+
+    <script src="../webcomponentsjs/webcomponents.min.js"></script>
+    <link rel="import" href="strf-time.html">
+
+    <style>
+        html {
+            height: 100%;
+            background: #ddd;
+        }
+
+        body {
+            width: 470px;
+            margin: auto;
+            padding: 2em;
+            height: 100%;
+            background: #eee;
+            box-shadow: 0 0 20px 0px rgba(0, 0, 0, 0.2);
+            font-size: 1.2em;
+            text-align: justify;
+        }
+
+        code {
+            padding: 2px;
+            background: #fff;
+            font-family: 'Droid Sans Mono', 'CPMono_v07 Bold', 'Droid Sans', monospace;
+            font-size: 0.8em;
+        }
+
+        time {
+            display: inline-block;
+            margin: 0.5em;
+            padding: 0.5em;
+            background: #222;
+            border-radius: 2px;
+            color: #fff;
+            font-family: 'Helvetica Neue', 'Roboto', 'Arial', sans-serif;
+        }
+    </style>
+</head>
+<body unresolved>
+
+<h2>&lt;time is=&quot;strf-time&quot;&gt; Demo</h2>
+
+<p>
+    Note that the <code>datetime</code> attribute must always be set to a
+    <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/time">valid date with an optional time string</a>.
+    Examples of using <code>&lt;time is=&quot;strf-time&quot;&gt;</code>:<br>
+</p>
+
+<p>
+    With no format or locale attribute, it defaults to <code>%Y-%m-%d</code>.<br>
+    <time is="strf-time" datetime="Thu Jan 01 1970 01:00:00 GMT+0100"></time>
+</p>
+
+<p>Specified <code> format="%A, %B %e"</code>, but relying on browser's language setting to localize weekday and month.<br>
+    <time is="strf-time" datetime="Thu Feb 26 2015 14:10:26 GMT+0100" format="%A, %B %e"></time>
+</p>
+
+<p>Specified <code>format="%A, %B %e"</code> and <code>locale="de"</code>, then <code>locale="es"</code> to localize weekday and month.<br>
+    <time is="strf-time" datetime="Thu Feb 26 2015 14:10:26 GMT+0100" format="%A, %B %e" locale="de"></time>
+    <time is="strf-time" datetime="Thu Feb 26 2015 14:10:26 GMT+0100" format="%A, %B %e" locale="es"></time>
+</p>
+
+</body>
+</html>
