@@ -1,0 +1,36 @@
+{
+  "name": "strf-time",
+  "authors": [
+    "Balázs Suhajda<balazs.suhajda@tretton37.com>"
+  ],
+  "description": "A Polymer custom element extending <time> that displays the time and date in any format using the strftime syntax.",
+  "keywords": [
+    "web-component",
+    "web-components",
+    "polymer",
+    "time"
+  ],
+  "main": "strf-time.html",
+  "license": "MIT",
+  "homepage": "https://github.com/suhajdab/strf-time/",
+  "ignore": [
+    "/.*",
+    "/tests/"
+  ],
+  "dependencies": {
+    "polymer": "Polymer/polymer#^0.5.5"
+  },
+  "devDependencies": {
+    "web-component-tester": "*"
+  },
+  "_release": "dcd5512777",
+  "_resolution": {
+    "type": "branch",
+    "branch": "master",
+    "commit": "dcd5512777b24867b8030b8de113116a0c762684"
+  },
+  "_source": "git://github.com/suhajdab/strf-time.git",
+  "_target": "master",
+  "_originalSource": "suhajdab/strf-time",
+  "_direct": true
+}

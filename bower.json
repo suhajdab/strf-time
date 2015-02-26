@@ -1,0 +1,7 @@
+{
+  "name": "strf-time#gh-pages",
+  "private": true,
+  "dependencies": {
+    "strf-time": "suhajdab/strf-time#master"
+  }
+}

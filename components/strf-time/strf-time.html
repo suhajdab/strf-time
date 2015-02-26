@@ -1,0 +1,179 @@
+<link rel="import" href="../polymer/polymer.html">
+
+<!--
+ A Polymer custom element that extends the time element.
+ It displays the time and date in any format using the strftime syntax.
+
+@element strf-time
+@extends input
+@homepage https://github.com/suhajdab/strf-time
+-->
+
+<polymer-element name="strf-time" attributes="datetime format locale" extends="time">
+    <script>
+        Polymer( 'strf-time', {
+
+            /**
+             * This attribute indicates the time and date of the element
+             * and must be a valid date with an optional time string.
+             * If the value cannot be parsed as a date with an optional time string,
+             * the element does not have an associated time stamp.
+             *
+             * As per: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/time
+             * Valid date: http://www.w3.org/TR/html-markup/datatypes.html#common.data.datetime
+             *
+             * @attribute datetime
+             * @type string
+             * @default new Date()
+             */
+            datetime: new Date(),
+
+            /**
+             * The format to use when outputting date / time using strftime parameters.
+             * Defaults to ISO 8601 format.
+             *
+             * @attribute format
+             * @type string
+             * @default '%Y-%m-%d'
+             */
+            format: '%Y-%m-%d',
+
+            /**
+             * Optional locale attribute for outputting strings in a specific language.
+             *
+             * Will default to using the navigator.language, which returns a string representing
+             * the preferred language of the user, usually the language of the browser UI,
+             * available in modern browsers (>=IE11).
+             * https://developer.mozilla.org/en-US/docs/Web/API/NavigatorLanguage/language
+             *
+             * @attribute locale
+             * @type string
+             * @default navigator.language
+             */
+            locale: navigator.language,
+
+            /**
+             * This method will inject to formatted date / time as content into the element using the defined attributes
+             */
+            formatContent: function () {
+                this._datetime = new Date( this.datetime );
+                this._locale = this.locale;
+                this._format = this.format;
+                this.textContent = this.strftime( this._datetime, this._format, this._locale );
+            },
+
+
+            /**
+             * Polymer's lifecycle callback
+             * // More info: http://www.polymer-project.org/docs/polymer/polymer.html#lifecyclemethods
+             *
+             * This method will call the date / time formatter
+             */
+            ready: function () {
+                // TODO: do nothing if datetime missing
+                // TODO: add toLocaleString test and suggest polyfill if missing
+                this.formatContent();
+            },
+
+            /**
+             * Polymer attribute observers to update content based on attribute changes
+             */
+            observe: {
+                datetime: 'formatContent',
+                format: 'formatContent',
+                locale: 'formatContent'
+            },
+
+            /**
+             * This method will zero pad any single digit numbers and return a string
+             * ex: 15 => '15', 5 => '05'
+             *
+             * @param {number} num Number to pad
+             * @returns {string} Padded number as string
+             */
+            pad: function ( num ) {
+                return ( '0' + num ).slice( -2 );
+            },
+
+            strftime: function( time, formatString, locale ) {
+                var day = time.getDay();
+                var date = time.getDate();
+                var month = time.getMonth();
+                var year = time.getFullYear();
+                var hour = time.getHours();
+                var minute = time.getMinutes();
+                var second = time.getSeconds();
+
+                return formatString.replace(/%([%aAbBcdeHIlmMpPSwyYZz])/g, function( _arg ) {
+                    var match;
+                    var modifier = _arg[ 1 ];
+                    switch (modifier) {
+                        case '%':
+                            return '%';
+                        case 'a':
+                            return time.toLocaleString( locale, { weekday: 'short' });
+                        case 'A':
+                            return time.toLocaleString( locale, { weekday: 'long' });
+                        case 'b':
+                            return time.toLocaleString( locale, { month: 'short' });
+                        case 'B':
+                            return time.toLocaleString( locale, { month: 'long' });
+                        case 'c':
+                            return time.toString();
+                        case 'd':
+                            return this.pad( date );
+                        case 'e':
+                            return date;
+                        case 'H':
+                            return this.pad( hour );
+                        case 'I':
+                            return this.pad( this.strftime( time, '%l' ));
+                        case 'l':
+                            if ( hour === 0 || hour === 12 ) {
+                                return 12;
+                            } else {
+                                return ( hour + 12 ) % 12;
+                            }
+                            break;
+                        case 'm':
+                            return this.pad( month + 1 );
+                        case 'M':
+                            return this.pad( minute );
+                        case 'p':
+                            if ( hour > 11 ) {
+                                return 'PM';
+                            } else {
+                                return 'AM';
+                            }
+                            break;
+                        case 'P':
+                            if ( hour > 11 ) {
+                                return 'pm';
+                            } else {
+                                return 'am';
+                            }
+                            break;
+                        case 'S':
+                            return this.pad( second );
+                        case 'w':
+                            return day;
+                        case 'y':
+                            return this.pad( year % 100 );
+                        case 'Y':
+                            return year;
+                        case 'Z':
+                            match = time.toString().match(/\((\w+)\)$/);
+                            return match ? match[ 1 ] : '';
+                        case 'z':
+                            match = time.toString().match(/\w([+-]\d\d\d\d) /);
+                            return match ? match[ 1 ] : '';
+                    }
+                }.bind( this ));
+            }
+        });
+    </script>
+</polymer-element>
+
+<!--
+TODO: Use https://github.com/samsonjs/strftime instead
+ -->
