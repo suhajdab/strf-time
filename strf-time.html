@@ -56,6 +56,11 @@
              * This method will inject to formatted date / time as content into the element using the defined attributes
              */
             formatContent: function () {
+                if ( isNaN( Date.parse( this.datetime ))) {
+                    console.log( 'datetime attribute does not seem to be a valid date' );
+                    return;
+                }
+
                 this._datetime = new Date( this.datetime );
                 this._locale = this.locale;
                 this._format = this.format;
@@ -70,7 +75,6 @@
              * This method will call the date / time formatter
              */
             ready: function () {
-                // TODO: do nothing if datetime missing
                 // TODO: add toLocaleString test and suggest polyfill if missing
                 this.formatContent();
             },
@@ -95,39 +99,84 @@
                 return ( '0' + num ).slice( -2 );
             },
 
-            strftime: function( time, formatString, locale ) {
-                var day = time.getDay();
-                var date = time.getDate();
-                var month = time.getMonth();
-                var year = time.getFullYear();
-                var hour = time.getHours();
-                var minute = time.getMinutes();
-                var second = time.getSeconds();
+            /**
+             * Calculate week number
+             *
+             * @param {date} datetime - date to count weeks to
+             * @param {boolean} mondayFirst - is Monday first day of the week
+             */
+            weekNumber: function (datetime, mondayFirst) {
+                var dayOfWeek = datetime.getDay();
+                if (mondayFirst) {
+                    if (dayOfWeek === 0) dayOfWeek = 6;
+                    else dayOfWeek--;
+                }
+                var firstDayOfYear = new Date( datetime.getFullYear(), 0, 1 ),
+                    daysUntilDate = ( datetime - firstDayOfYear ) / ( 1000 * 60 * 60 * 24 ),
+                    weekNumber = ( daysUntilDate + 7 - dayOfWeek ) / 7;
+                return Math.floor( weekNumber );
+            },
 
-                return formatString.replace(/%([%aAbBcdeHIlmMpPSwyYZz])/g, function( _arg ) {
+            strftime: function( datetime, formatString, locale ) {
+                var day = datetime.getDay();
+                var date = datetime.getDate();
+                var month = datetime.getMonth();
+                var year = datetime.getFullYear();
+                var hour = datetime.getHours();
+                var minute = datetime.getMinutes();
+                var second = datetime.getSeconds();
+
+                return formatString.replace(/%([%aAbBCdDeFhHIjklLmMnpPrRsStTuUvwWyYzZ])/g, function( _arg ) {
                     var match;
                     var modifier = _arg[ 1 ];
-                    switch (modifier) {
+                    switch ( modifier ) {
                         case '%':
                             return '%';
+                        // abbreviated weekday name
                         case 'a':
-                            return time.toLocaleString( locale, { weekday: 'short' });
+                            return datetime.toLocaleString( locale, { weekday: 'short' });
+                        // full weekday name
                         case 'A':
-                            return time.toLocaleString( locale, { weekday: 'long' });
+                            return datetime.toLocaleString( locale, { weekday: 'long' });
+                        // abbreviated month name
                         case 'b':
-                            return time.toLocaleString( locale, { month: 'short' });
+                            return datetime.toLocaleString( locale, { month: 'short' });
+                        // full month name
                         case 'B':
-                            return time.toLocaleString( locale, { month: 'long' });
-                        case 'c':
-                            return time.toString();
+                            return datetime.toLocaleString( locale, { month: 'long' });
+                        // AD century (year / 100), padded to 2 digits
+                        case 'C':
+                            return datetime.toString();
+                        // day of the month, padded to 2 digits (01-31)
                         case 'd':
                             return this.pad( date );
+                        // equivalent to %m/%d/%y
+                        case 'D':
+                            return this.strftime( datetime, '%m/%d/%y', locale );
+                        // day of the month, padded with a leading space for single digit values (1-31)
                         case 'e':
                             return date;
+                        // equivalent to %Y-%m-%d
+                        case 'F':
+                            return this.strftime( datetime, '%Y-%m-%d', locale );
+                        // the same as %b (abbreviated month name)
+                        case 'h':
+                            return this.strftime( datetime, '%b', locale );
+                        // the hour (24-hour clock), padded to 2 digits (00-23)
                         case 'H':
                             return this.pad( hour );
+                        // the hour (12-hour clock), padded to 2 digits (01-12)
                         case 'I':
-                            return this.pad( this.strftime( time, '%l' ));
+                            return this.pad( this.strftime( datetime, '%l', locale ));
+                        // day of the year, padded to 3 digits (001-366)
+                        case 'j':
+                            var y = new Date( datetime.getFullYear(), 0, 1 );
+                            var day = Math.ceil(( datetime.getTime() - y.getTime()) / ( 1000 * 60 * 60 * 24 ));
+                            return ( '00' + day ).slice( -3 );
+                        // the hour (24-hour clock), padded with a leading space for single digit values (0-23)
+                        case 'k':
+                            return hour;
+                        // the hour (12-hour clock), padded with a leading space for single digit values (1-12)
                         case 'l':
                             if ( hour === 0 || hour === 12 ) {
                                 return 12;
@@ -135,10 +184,19 @@
                                 return ( hour + 12 ) % 12;
                             }
                             break;
+                        // the milliseconds, padded to 3 digits (000-999)
+                        case 'L':
+                            return ( '00' + datetime.getTime()).slice( -3 );
+                        // the month, padded to 2 digits (01-12)
                         case 'm':
                             return this.pad( month + 1 );
+                        // the minute, padded to 2 digits (00-59)
                         case 'M':
                             return this.pad( minute );
+                        // new line
+                        case 'n':
+                            return '\n';
+                        // "AM" or "PM"
                         case 'p':
                             if ( hour > 11 ) {
                                 return 'PM';
@@ -146,6 +204,7 @@
                                 return 'AM';
                             }
                             break;
+                        // "am" or "pm" in lowercase
                         case 'P':
                             if ( hour > 11 ) {
                                 return 'pm';
@@ -153,19 +212,52 @@
                                 return 'am';
                             }
                             break;
+                        // equivalent to %I:%M:%S %p
+                        case 'r':
+                            return this.strftime( datetime, '%I:%M:%S %p', locale );
+                        // equivalent to %H:%M
+                        case 'R':
+                            return this.strftime( datetime, '%H:%M', locale );
+                        // the number of seconds since the Epoch
+                        case 's':
+                            return Math.floor( datetime.getTime() / 1000 );
+                        // the second, padded to 2 digits (00-60)
                         case 'S':
                             return this.pad( second );
+                        // tab
+                        case 't':
+                            return '\t';
+                        // equivalent to %H:%M:%S
+                        case 'T':
+                            return this.strftime( datetime, '%H:%M:%S', locale );
+                        // the weekday, Monday as the first day of the week (1-7)
+                        case 'u':
+                            return day == 0 ? 7 : day;
+                        // week number of the year, Sunday as the first day of the week, padded to 2 digits (00-53)
+                        case 'U':
+                            return this.pad( this.weekNumber( datetime ));
+                        // equivalent to %e-%b-%Y
+                        case 'v':
+                            return this.strftime( datetime, '%e-%b-%Y', locale );
+                        // the weekday, Sunday as the first day of the week (0-6)
                         case 'w':
                             return day;
+                        // week number of the year, Monday as the first day of the week, padded to 2 digits (00-53)
+                        case 'W':
+                            return this.pad( this.weekNumber( datetime, true ));
+                        // the year without the century (00-99)
                         case 'y':
                             return this.pad( year % 100 );
+                        // the year with the century
                         case 'Y':
                             return year;
-                        case 'Z':
-                            match = time.toString().match(/\((\w+)\)$/);
-                            return match ? match[ 1 ] : '';
+                        // the time zone offset from UTC
                         case 'z':
-                            match = time.toString().match(/\w([+-]\d\d\d\d) /);
+                            match = datetime.toString().match(/\w([+-]\d\d\d\d) /);
+                            return match ? match[ 1 ] : '';
+                        // the time zone name, replaced with an empty string if it is not found
+                        case 'Z':
+                            match = datetime.toString().match(/\((\w+)\)$/);
                             return match ? match[ 1 ] : '';
                     }
                 }.bind( this ));
@@ -173,7 +265,3 @@
         });
     </script>
 </polymer-element>
-
-<!--
-TODO: Use https://github.com/samsonjs/strftime instead
- -->
